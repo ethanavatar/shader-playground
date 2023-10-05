@@ -1,30 +1,58 @@
+// C standard library
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
+// C++ standard library
+#include <string>
+#include <iostream>
+#include <fstream>
+
+// OpenGL
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <glad/glad.h>
 
-static void error_callback(int32_t error, const char* description);
+static void error_callback(int32_t error, const char *const description);
 static void process_input(GLFWwindow *const window, int32_t key, int32_t scancode, int32_t action, int32_t mods);
 static void process_resize(GLFWwindow *const window, int32_t width, int32_t height);
 
-static const char *vertex_shader_source = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main() {\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
+const char* read_file(const char *const path) {
+    FILE* file = fopen(path, "rb");
 
+    if (file == NULL) {
+        fprintf(stderr, "Could not open file \"%s\".\n", path);
+        exit(74);
+    }
 
-const char *fragment_shader_source = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main() {\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\0";
+    fseek(file, 0L, SEEK_END);
+    size_t fileSize = ftell(file);
+    rewind(file);
+
+    char* buffer = (char*) malloc(fileSize + 1);
+
+    if (buffer == NULL) {
+        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+        exit(74);
+    }
+
+    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+
+    if (bytesRead < fileSize) {
+        fprintf(stderr, "Could not read file \"%s\".\n", path);
+        exit(74);
+    }
+
+    buffer[bytesRead] = '\0';
+
+    fclose(file);
+    return buffer;
+}
 
 int32_t main(void) {
+
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         exit(EXIT_FAILURE);
@@ -55,15 +83,33 @@ int32_t main(void) {
     }
 
     glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, process_resize); 
+    glfwSetFramebufferSizeCallback(window, process_resize);
+
+    const char *vertex_shader_source = read_file("src\\vertex.glsl");
+    const char *fragment_shader_source = read_file("src\\fragment.glsl");
 
     uint32_t vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
     glCompileShader(vertex_shader);
 
+    int success;
+    char info_log[512];
+    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << info_log << std::endl;
+    }
+
     uint32_t fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
     glCompileShader(fragment_shader);
+
+    // check for shader compile errors
+    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
+    }
 
     uint32_t shader_program = glCreateProgram();
     glAttachShader(shader_program, vertex_shader);
@@ -137,7 +183,7 @@ int32_t main(void) {
 }
 
 
-static void error_callback(int32_t error, const char* description) {
+static void error_callback(int32_t error, const char *const description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 

@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) anyerror!void {
 
     const source_files = .{"src/main.cc"};
     const cflags = .{ "-std=c99", "-pedantic", "-W", "-Wall", "-Wextra" };
-    const cxxflags = .{ "-std=c++11", "-pedantic", "-W", "-Wall", "-Wextra" };
+    const cxxflags = .{ "-std=c++14", "-pedantic", "-W", "-Wall", "-Wextra" };
 
     exe.addCSourceFiles(&source_files, &cxxflags);
 
