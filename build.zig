@@ -1,35 +1,8 @@
 const std = @import("std");
 
-pub fn build_glfw(b: *std.Build) !void {
-    const glfw_prebuild = b.addSystemCommand(&.{
-        "cmake",
-        "-S",
-        "deps/glfw",
-        "-B",
-        "deps/glfw/build",
-        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
-        "-DUSE_MSVC_RUNTIME_LIBRARY_DLL=OFF",
-    });
-    try glfw_prebuild.step.make();
-
-    const glfw = b.addSystemCommand(&.{
-        "cmake",
-        "--build",
-        "deps/glfw/build",
-        "-j",
-        "--target",
-        "ALL_BUILD",
-        "--config",
-        "Release",
-    });
-    try glfw.step.make();
-}
-
-pub fn build(b: *std.Build) !void {
+pub fn build(b: *std.Build) anyerror!void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    try build_glfw(b);
 
     const exe = b.addExecutable(.{
         .name = "glfw-playground",
@@ -37,13 +10,17 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    const source_files = .{"src/main.c"};
+    const source_files = .{"src/main.cc"};
     const cflags = .{ "-std=c99", "-pedantic", "-W", "-Wall", "-Wextra" };
+    const cxxflags = .{ "-std=c++11", "-pedantic", "-W", "-Wall", "-Wextra" };
 
-    exe.addCSourceFiles(&source_files, &cflags);
+    exe.addCSourceFiles(&source_files, &cxxflags);
 
-    exe.addIncludePath("deps/glfw/include");
-    exe.addLibraryPath("deps/glfw/build/src/Release");
+    exe.addIncludePath(.{ .path = "deps/glad/include" });
+    exe.addCSourceFile(.{ .file = .{ .path = "deps/glad/src/glad.c" }, .flags = &cflags });
+
+    exe.addIncludePath(.{ .path = "deps/glfw/include" });
+    exe.addLibraryPath(.{ .path = "deps/glfw/build/src/Release" });
 
     exe.linkLibC();
     exe.linkSystemLibrary("glfw3");
@@ -52,9 +29,9 @@ pub fn build(b: *std.Build) !void {
     exe.linkSystemLibrary("gdi32");
     exe.linkSystemLibrary("shell32");
 
-    exe.install();
+    b.installArtifact(exe);
 
-    const run_cmd = exe.run();
+    const run_cmd = b.addRunArtifact(exe);
 
     run_cmd.step.dependOn(b.getInstallStep());
 
