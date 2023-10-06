@@ -3,11 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
-// C++ standard library
-#include <string>
-#include <iostream>
-#include <fstream>
+#include <time.h>
 
 // OpenGL
 #define GLFW_INCLUDE_NONE
@@ -15,41 +11,16 @@
 
 #include <glad/glad.h>
 
+// Local includes
+#include "util.h"
+#include "time.hpp"
+
 static void error_callback(int32_t error, const char *const description);
 static void process_input(GLFWwindow *const window, int32_t key, int32_t scancode, int32_t action, int32_t mods);
 static void process_resize(GLFWwindow *const window, int32_t width, int32_t height);
 
-const char* read_file(const char *const path) {
-    FILE* file = fopen(path, "rb");
-
-    if (file == NULL) {
-        fprintf(stderr, "Could not open file \"%s\".\n", path);
-        exit(74);
-    }
-
-    fseek(file, 0L, SEEK_END);
-    size_t fileSize = ftell(file);
-    rewind(file);
-
-    char* buffer = (char*) malloc(fileSize + 1);
-
-    if (buffer == NULL) {
-        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
-        exit(74);
-    }
-
-    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-
-    if (bytesRead < fileSize) {
-        fprintf(stderr, "Could not read file \"%s\".\n", path);
-        exit(74);
-    }
-
-    buffer[bytesRead] = '\0';
-
-    fclose(file);
-    return buffer;
-}
+const int window_width = 800;
+const int window_height = 600;
 
 int32_t main(void) {
 
@@ -64,7 +35,7 @@ int32_t main(void) {
 
     glfwSetErrorCallback(error_callback);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "Hello, Sailor!", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(window_width, window_height, "Hello, Sailor!", NULL, NULL);
 
     if (window == NULL) {
         fprintf(stderr, "Failed to create GLFW window\n");
@@ -82,7 +53,7 @@ int32_t main(void) {
         exit(EXIT_FAILURE);
     }
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, window_width, window_height);
     glfwSetFramebufferSizeCallback(window, process_resize);
 
     const char *vertex_shader_source = read_file("src\\vertex.glsl");
@@ -97,7 +68,7 @@ int32_t main(void) {
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << info_log << std::endl;
+        fprintf(stderr, "ERROR::SHADER::VERTEX::COMPILATION_FAILED %s\n", info_log);
     }
 
     uint32_t fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -108,7 +79,7 @@ int32_t main(void) {
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
+        fprintf(stderr, "ERROR::SHADER::VERTEX::COMPILATION_FAILED %s\n", info_log);
     }
 
     uint32_t shader_program = glCreateProgram();
@@ -120,13 +91,21 @@ int32_t main(void) {
     glDeleteShader(fragment_shader);
 
     float vertices[] = {
+         1.0f,  1.0f, 0.0f,  // top right
+         1.0f, -1.0f, 0.0f,  // bottom right
+        -1.0f, -1.0f, 0.0f,  // bottom left
+        -1.0f,  1.0f, 0.0f   // top left 
+    };
+    /*
+    vertices = {
          0.5f,  0.5f, 0.0f,  // top right
          0.5f, -0.5f, 0.0f,  // bottom right
         -0.5f, -0.5f, 0.0f,  // bottom left
         -0.5f,  0.5f, 0.0f   // top left 
     };
+    */
 
-    uint32_t indices[] = {  // note that we start from 0!
+    uint32_t indices[] = {
         0, 1, 3,   // first triangle
         1, 2, 3    // second triangle
     }; 
@@ -149,8 +128,23 @@ int32_t main(void) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    uint64_t start_milis = get_milis();
+    uint64_t global_time_milis = 0;
+    uint64_t last_global_milis = start_milis;
+    float global_time = 0.0f;
+
+    glUseProgram(shader_program);
 
     while(!glfwWindowShouldClose(window)) {
+
+        global_time_milis = get_milis() - start_milis;
+        global_time = global_time_milis / 1000.0f;
+
+        float delta_time = global_time_milis - last_global_milis;
+        last_global_milis = global_time_milis;
+
+        //printf("iResolution: (%d, %d), iGlobalTime: %.6f, iDeltaTime: %.6f\n", window_width, window_height, global_time, delta_time);
+
         float ratio;
         int width, height;
 
@@ -162,11 +156,13 @@ int32_t main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw stuff
-        glUseProgram(shader_program);
+        glUniform1f(glGetUniformLocation(shader_program, "iGlobalTime"), global_time);
+        glUniform2i(glGetUniformLocation(shader_program, "iResolution"), window_width, window_height);
+
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
+        //glBindVertexArray(0);
+        
         // Push stuff
         glfwSwapBuffers(window);
         glfwPollEvents();

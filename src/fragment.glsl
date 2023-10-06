@@ -1,5 +1,9 @@
 #version 330 core
-out vec4 fragColor;
+
+uniform float iGlobalTime;
+uniform vec2 iResolution;
+
 void main() {
-   fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+   vec2 uv = gl_FragCoord.xy / iResolution.xy;
+   gl_FragColor = vec4(uv.x, 0.0, 0.0, 1.0);
 }

@@ -10,14 +10,27 @@ pub fn build(b: *std.Build) anyerror!void {
         .optimize = optimize,
     });
 
-    const source_files = .{"src/main.cc"};
-    const cflags = .{ "-std=c99", "-pedantic", "-W", "-Wall", "-Wextra" };
-    const cxxflags = .{ "-std=c++14", "-pedantic", "-W", "-Wall", "-Wextra" };
+    const c_files = .{
+        "src/util.c",
+        "src/main.c",
+    };
 
-    exe.addCSourceFiles(&source_files, &cxxflags);
+    const cxx_files = .{
+        "src/time.cpp",
+    };
+
+    const c_flags = .{ "-std=c11", "-pedantic", "-W", "-Wall", "-Wextra" };
+    const cxx_flags = .{ "-std=c++14", "-pedantic", "-W", "-Wall", "-Wextra" };
+
+    exe.addIncludePath(.{ .path = "include" });
+    exe.addCSourceFiles(&c_files, &c_flags);
+    exe.addCSourceFiles(&cxx_files, &cxx_flags);
 
     exe.addIncludePath(.{ .path = "deps/glad/include" });
-    exe.addCSourceFile(.{ .file = .{ .path = "deps/glad/src/glad.c" }, .flags = &cflags });
+    exe.addCSourceFile(.{
+        .file = .{ .path = "deps/glad/src/glad.c" },
+        .flags = &c_flags,
+    });
 
     exe.addIncludePath(.{ .path = "deps/glfw/include" });
     exe.addLibraryPath(.{ .path = "deps/glfw/build/src/Release" });
