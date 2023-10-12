@@ -40,7 +40,7 @@ void exit_if_gl_error(uint32_t shader, GLenum error_type, char *error_header) {
     char info_log[512];
 
     glGetShaderiv(shader, error_type, &success);
-    if (success == GL_TRUE) {
+    if (success) {
         return;
     }
 
