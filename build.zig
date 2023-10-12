@@ -19,8 +19,22 @@ pub fn build(b: *std.Build) anyerror!void {
         "src/time.cpp",
     };
 
-    const c_flags = .{ "-std=c11", "-pedantic", "-W", "-Wall", "-Wextra" };
-    const cxx_flags = .{ "-std=c++14", "-pedantic", "-W", "-Wall", "-Wextra" };
+    const c_flags = .{
+        "-std=c11",
+        "-pedantic",
+        "-W",
+        "-Wall",
+        //"-Werror",
+        "-Wextra",
+    };
+    const cxx_flags = .{
+        "-std=c++14",
+        "-pedantic",
+        "-W",
+        "-Wall",
+        //"-Werror",
+        "-Wextra",
+    };
 
     exe.addIncludePath(.{ .path = "include" });
     exe.addCSourceFiles(&c_files, &c_flags);

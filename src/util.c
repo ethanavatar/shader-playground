@@ -1,11 +1,13 @@
+#include <corecrt.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 const char* read_file(const char *const path) {
-    FILE* file = fopen(path, "rb");
+    FILE* file = NULL;
+    errno_t error = fopen_s(&file, path, "rb");
 
-    if (file == NULL) {
+    if (error != 0 || file == NULL) {
         fprintf(stderr, "Could not open file \"%s\".\n", path);
         exit(74);
     }
