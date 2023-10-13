@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) anyerror!void {
         "-pedantic",
         "-W",
         "-Wall",
-        //"-Werror",
+        "-Werror",
         "-Wextra",
     };
     const cxx_flags = .{

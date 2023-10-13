@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <stdbool.h>
 
 // OpenGL
 #define GLFW_INCLUDE_NONE
@@ -15,7 +16,6 @@
 #include "time.hpp"
 
 // ----------------------------------------------------------------------------
-
 const GLenum DRAW_MODE = GL_STATIC_DRAW;
 
 void error(int32_t error, const char *description) {
@@ -49,16 +49,22 @@ void exit_if_gl_error(uint32_t shader, GLenum error_type, char *error_header) {
     exit(EXIT_FAILURE);
 }
 
+static const char *const vertex_shader_source = 
+"#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main() {\n"
+"    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\n";
+
 int32_t main(int32_t argc, const char *const argv[]) {
 
-    if (argc < 3) {
-        fprintf(stderr, "Expected 2 arguments, got %d\n", argc - 1);
-        fprintf(stderr, "Usage: $ <program> path\\to\\vert path\\to\\frag\n");
+    if (argc != 2) {
+        fprintf(stderr, "Expected 1 arguments, got %d\n", argc - 1);
+        fprintf(stderr, "Usage: $ <program> path\\to\\fragment.glsl\n");
         exit(EXIT_SUCCESS);
     }
 
-    const char *vertex_shader_source = read_file(argv[1]);
-    const char *fragment_shader_source = read_file(argv[2]);
+    const char *fragment_shader_source = read_file(argv[1]);
 
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -159,6 +165,8 @@ int32_t main(int32_t argc, const char *const argv[]) {
     float program_time_secs = 0.0f;
 
     while(!glfwWindowShouldClose(window)) {
+
+        // Update stuff
         
         input(window);
 
@@ -169,8 +177,13 @@ int32_t main(int32_t argc, const char *const argv[]) {
         (void) delta_time;
         
         last_program_milis = program_time_milis;
-
+        
         glfwGetFramebufferSize(window, &width, &height);
+
+        char title[256];
+        snprintf(title, 256, "Shader Playground - %dx%d %.2f ms", width, height, delta_time);
+        glfwSetWindowTitle(window, title);
+
 
         // Clear stuff
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
