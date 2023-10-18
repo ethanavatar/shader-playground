@@ -77,11 +77,12 @@ int32_t main(int32_t argc, const char *const argv[]) {
 
     glfwSetErrorCallback(error);
 
-    int width = 800;
-    int height = 600;
+    int width = 1600;
+    int height = 1200;
 
     char *title = "Shader Playground";
     GLFWwindow *window = glfwCreateWindow(width, height, title, NULL, NULL);
+    glfwSetWindowAspectRatio(window, 4, 3);
 
     if (window == NULL) {
         fprintf(stderr, "Failed to create GLFW window\n");
@@ -180,10 +181,10 @@ int32_t main(int32_t argc, const char *const argv[]) {
         
         glfwGetFramebufferSize(window, &width, &height);
 
+        char *title_format = "Shader Playground - %dx%d %.2f ms";
         char title[256];
-        snprintf(title, 256, "Shader Playground - %dx%d %.2f ms", width, height, delta_time);
+        snprintf(title, 256, title_format, width, height, delta_time);
         glfwSetWindowTitle(window, title);
-
 
         // Clear stuff
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
