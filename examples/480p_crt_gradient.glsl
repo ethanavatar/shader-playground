@@ -67,9 +67,6 @@ void main() {
     int width = 640;
     int height = 480;
 
-    // The number of scanlines on the screen
-    int tv_line_count = 480;
-
     // A 640x480 pixel grid
     vec2 downsampled_uv = vec2(floor(uv.x * 640) / 640, floor(uv.y * 480) / 480);
     
@@ -84,12 +81,6 @@ void main() {
     // Apply noise to the color
     color2 = mix(color2, noise(uv * 960, color2), 0.3);
 
-    // 240p is 480 TV lines but it skips every other line
-    // This creates the "Scanline" effect
-    float s = floor(sin(uv.y * tv_line_count));
-    s = remap(-1.0, 0.0, 0.0, 1.0, s);
-    vec4 color3 = vec4(color2 * s, 1.0);
-
-    gl_FragColor = color3;
+    gl_FragColor = vec4(color2, 1.0);
 }
 
