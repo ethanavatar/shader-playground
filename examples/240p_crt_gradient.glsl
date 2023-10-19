@@ -2,11 +2,23 @@
 uniform float iTime;
 uniform ivec2 iResolution;
 
-float random(vec2 uv) {
-	return fract(sin(dot(uv, vec2(15.5151, 42.2561))) * 12341.14122 * sin(iTime * 0.03));
+float lerp(float a, float b, float t) {
+    return (1 - t) * a + b * t;
 }
 
-float noise(vec2 uv) {
+float inv_lerp(float a, float b, float v) {
+    return (v - a) / (b - a);
+}
+
+float remap(float a, float b, float c, float d, float v) {
+    return lerp(c, d, inv_lerp(a, b, v));
+}
+
+float random(vec2 uv) {
+    return fract(sin(dot(uv, vec2(15.5151, 42.2561))) * 12341.14122 * sin(iTime * 0.03));
+}
+
+vec3 noise(vec2 uv, vec3 color) {
  	vec2 i = floor(uv);
     vec2 f = fract(uv);
     
@@ -17,7 +29,8 @@ float noise(vec2 uv) {
     
     vec2 u = smoothstep(0., 1., f);
     
-    return mix(a,b, u.x) + (c - a) * u.y * (1. - u.x) + (d - b) * u.x * u.y; 
+    float f2 = mix(a,b, u.x) + (c - a) * u.y * (1. - u.x) + (d - b) * u.x * u.y; 
+    return mix(color, vec3(f2), 0.5);
 }
 
 void main() {
@@ -38,19 +51,18 @@ void main() {
     // 640x480
     vec2 pixel_uv = vec2(floor(uv.x * 640) / 640, floor(uv.y * 480) / 480); 
     
-    // Time varying pixel color
+    // Time varying color gradient
     vec3 color = 0.5 + 0.5 * cos(iTime + pixel_uv.xyx + vec3(0,2,4));
-
-    vec3 color2 = mix(color, subpixel_color, 0.75);
-
-    // Scanlines
-    float s = sin(uv.y * 480) * 0.5 + 0.5;; 
-    color2 = mix(color2, vec3(s), 0.5);
+    vec3 color2 = mix(color, subpixel_color, 0.4);
 
     // Noise
-    float n = noise(uv * 480);
-    color2 = mix(color2, vec3(n), 0.1);
+    color2 = mix(color2, noise(uv * 480, color2), 0.3);
 
-    gl_FragColor = vec4(color2, 1.0); 
+    // Scanlines
+    float s = floor(sin(uv.y * 480));
+    s = remap(-1.0, 0.0, 0.0, 1.0, s);
+    vec4 color3 = vec4(color2 * s, 1.0); 
+
+    gl_FragColor = color3;
 }
 
