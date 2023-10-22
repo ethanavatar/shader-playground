@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) anyerror!void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "glfw-playground",
+        .name = "shader-playground",
         .target = target,
         .optimize = optimize,
     });

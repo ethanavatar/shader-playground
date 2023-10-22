@@ -59,8 +59,8 @@ static const char *const vertex_shader_source =
 int32_t main(int32_t argc, const char *const argv[]) {
 
     if (argc != 2) {
-        fprintf(stderr, "Expected 1 arguments, got %d\n", argc - 1);
-        fprintf(stderr, "Usage: $ <program> path\\to\\fragment.glsl\n");
+        fprintf(stderr, "Expected 1 argument, got %d\n", argc - 1);
+        fprintf(stderr, "Usage: $ shader-playground.exe path\\to\\fragment.glsl\n");
         exit(EXIT_SUCCESS);
     }
 
@@ -77,12 +77,12 @@ int32_t main(int32_t argc, const char *const argv[]) {
 
     glfwSetErrorCallback(error);
 
-    int width = 1600;
-    int height = 1200;
+    int width = 960;
+    int height = 720;
 
     char *title = "Shader Playground";
     GLFWwindow *window = glfwCreateWindow(width, height, title, NULL, NULL);
-    glfwSetWindowAspectRatio(window, 4, 3);
+    //glfwSetWindowAspectRatio(window, 4, 3);
 
     if (window == NULL) {
         fprintf(stderr, "Failed to create GLFW window\n");
