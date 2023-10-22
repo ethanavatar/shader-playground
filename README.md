@@ -12,6 +12,12 @@ Expected 1 arguments, got 0
 Usage: $ shader-playground.exe path\to\fragment.glsl
 ```
 
+Passing in the path to a GLSL v330 fragment shader will open a window with the shader running.
+
+Currently, the only uniforms provided are:
+- `iReolution`: `ivec2` for the current window size in pixels
+- `iTime`: `float` for the time since the program started
+
 There are some written fragment shaders in the `examples` directory.
 
 This one is an adaptation of the default program when you create a new shader in Shadertoy:
